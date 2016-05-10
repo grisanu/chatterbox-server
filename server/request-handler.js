@@ -32,64 +32,72 @@ var requestHandler = function(request, response) {
 
   var method = request.method;
   var url = request.url;
-  var statusCode = (method === 'GET') ? 200 : 201;
+  var statusCode;
+
+  if (url === '/classes/messages') {
+    statusCode = (method === 'GET') ? 200 : 201;
+
+    // Tell the client we are sending them plain text.
+    // You will need to change this if you are sending something
+    // other than plain text, like JSON or HTML.
+    var headers = defaultCorsHeaders;
+    headers['Content-Type'] = 'application/json';
+
+    // .writeHead() writes to the request line and headers of the response,
+    // which includes the status and all headers.
+    response.writeHead(statusCode, headers);
+    
+    // console.log('url');
+    // console.log(url);
+    // if (url !== '/classes/messages/') {
+    //   console.log('setting 404')
+    //   statusCode = 404;
+    //   // return;
+    // }
+
+    if (method === 'POST') {
+
+      var body = [];
+      request.on('data', function (chunk) {
+        body.push(chunk);
+      }).on('end', function () {
+        body = Buffer.concat(body).toString();
+        storage.results.push(JSON.parse(body));
+      });
 
 
-  // Tell the client we are sending them plain text.
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'application/json';
-
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
-  
-  // console.log('url');
-  // console.log(url);
-  // if (url !== '/classes/messages/') {
-  //   console.log('setting 404')
-  //   statusCode = 404;
-  //   // return;
-  // }
-
-  if (method === 'POST') {
-
-    var body = [];
-    request.on('data', function (chunk) {
-      body.push(chunk);
-    }).on('end', function () {
-      body = Buffer.concat(body).toString();
-      storage.results.push(JSON.parse(body));
-    });
+      // Make sure to always call response.end() - Node may not send
+      // anything back to the client until you do. The string you pass to
+      // response.end() will be the body of the response - i.e. what shows
+      // up in the browser.
+      // response.end();
 
 
-    // Make sure to always call response.end() - Node may not send
-    // anything back to the client until you do. The string you pass to
-    // response.end() will be the body of the response - i.e. what shows
-    // up in the browser.
-    // response.end();
+      var responseBody = {
+        headers: headers,
+        method: request.method,
+        url: request.url,
+        results: []
+      };
 
+      response.end(JSON.stringify(responseBody));
 
-    var responseBody = {
-      headers: headers,
-      method: request.method,
-      url: request.url,
-      results: []
-    };
+    } else if (method === 'GET' || method === 'OPTIONS') {
+      var responseBody = {
+        headers: headers,
+        method: request.method,
+        url: request.url,
+        results: storage.results
+      };
 
-    response.end(JSON.stringify(responseBody));
-
-  } else if (method === 'GET' || method === 'OPTIONS') {
-    var responseBody = {
-      headers: headers,
-      method: request.method,
-      url: request.url,
-      results: storage.results
-    };
-
-    response.end(JSON.stringify(responseBody));
+      response.end(JSON.stringify(responseBody));
+    }
+  } else {
+    statusCode = 404;
+    response.writeHead(statusCode);
+    response.end();
   }
+
 };
 
 
