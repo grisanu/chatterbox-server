@@ -47,7 +47,6 @@ var app = {
         // Trigger a fetch to update the messages, pass true to animate
         console.log('POST');
         console.log(data);
-        console.log(data.body);
         app.fetch();
       },
       error: function (data) {
@@ -67,7 +66,7 @@ var app = {
         // Don't bother if we have nothing to work with
         console.log('GET');
         console.log(data);
-        if (!data.results || !data.results.length) { return; }
+        if (!data.results || !data.results.length) { app.stopSpinner(); return; }
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length - 1];
@@ -220,7 +219,7 @@ var app = {
   handleSubmit: function(evt) {
     var message = {
       username: app.username,
-      text: app.$message.val(),
+      message: app.$message.val(),
       roomname: app.roomname || 'lobby'
     };
 

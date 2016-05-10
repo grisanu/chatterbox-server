@@ -11,6 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var storage = {results: []};
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -27,71 +28,74 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  // console.log(request);
-    
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
+  var method = request.method;
+  var url = request.url;
+  var statusCode = (method === 'GET') ? 200 : 201;
 
-  // The outgoing status.
-  var statusCode = request.method === 'GET' ? 200 : 201;
-
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
-  // if (request.method === 'GET') {
-  //   statusCode = 200;
-  // } else if (request.method === 'OPTIONS') {
-  //   statusCode = 200;
-  //   headers['Allow'] = 'GET, POST, OPTIONS';
-  // } else {
-  //   statusCode = 201;
-  // }
 
   // Tell the client we are sending them plain text.
-  //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
+  var headers = defaultCorsHeaders;
   headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
+  
+  // console.log('url');
+  // console.log(url);
+  // if (url !== '/classes/messages/') {
+  //   console.log('setting 404')
+  //   statusCode = 404;
+  //   // return;
+  // }
 
-  request.on('error', function (err) {
-    console.error(err.stack);
-  });
+  if (method === 'POST') {
 
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  if (request.method === 'POST') {
+    var body = [];
+    request.on('data', function (chunk) {
+      body.push(chunk);
+    }).on('end', function () {
+      body = Buffer.concat(body).toString();
+      storage.results.push(JSON.parse(body));
+    });
 
-    request.pipe(response);
-    // var body = [];
-    // request.on('data', function (chunk) {
-    //   body.push(chunk);
-    //   // console.log(chunk);
-    // }).on('end', function () {
-    //   body = Buffer.concat(body).toString();
-    // });
 
-    // var responseBody = {
-    //   headers: headers,
-    //   method: request.method,
-    //   url: request.url,
-    //   body: body
-    // };
+    // Make sure to always call response.end() - Node may not send
+    // anything back to the client until you do. The string you pass to
+    // response.end() will be the body of the response - i.e. what shows
+    // up in the browser.
+    // response.end();
 
-    // console.log(JSON.stringify(responseBody));
 
-    // response.end(JSON.stringify(responseBody));
-  } else if (request.method === 'GET' || request.method === 'OPTIONS') {
-    response.end('{"results": ["hello"]}');
+    var responseBody = {
+      headers: headers,
+      method: request.method,
+      url: request.url,
+      results: []
+    };
+
+    response.end(JSON.stringify(responseBody));
+
+  } else if (method === 'GET' || method === 'OPTIONS') {
+    var responseBody = {
+      headers: headers,
+      method: request.method,
+      url: request.url,
+      results: storage.results
+    };
+
+    response.end(JSON.stringify(responseBody));
   }
 };
+
+
+//
+// Calling .end "flushes" the response's internal buffer, forcing
+// node to actually send all the data over to the client.
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
