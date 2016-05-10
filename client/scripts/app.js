@@ -166,7 +166,7 @@ var app = {
       }
 
       var $message = $('<br><span/>');
-      $message.text(data.text).appendTo($chat);
+      $message.text(data.message).appendTo($chat);
 
       // Add the message to the UI
       app.$chats.append($chat);

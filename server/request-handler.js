@@ -11,60 +11,12 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var storage = {results: []};
+var fs = require('fs');
+var routerObj = require('./router.js');
 
 var requestHandler = function(request, response) {
-
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
-  var method = request.method;
-  var url = request.url;
-  var statusCode;
-
-  if (url === '/classes/messages') {
-    statusCode = (method === 'GET') ? 200 : 201;
-
-    var headers = defaultCorsHeaders;
-    headers['Content-Type'] = 'application/json';
-
-    response.writeHead(statusCode, headers);
-
-    if (method === 'POST') {
-
-      var body = [];
-      request.on('data', function (chunk) {
-        // console.log(chunk);
-        body.push(chunk);
-      }).on('end', function () {
-        body = Buffer.concat(body).toString();
-        storage.results.push(JSON.parse(body));
-      });
-
-      var responseBody = {
-        headers: headers,
-        method: request.method,
-        url: request.url,
-        results: []
-      };
-
-      response.end(JSON.stringify(responseBody));
-
-    } else if (method === 'GET' || method === 'OPTIONS') {
-      var responseBody = {
-        headers: headers,
-        method: request.method,
-        url: request.url,
-        results: storage.results
-      };
-
-      response.end(JSON.stringify(responseBody));
-    }
-  } else {
-    statusCode = 404;
-    response.writeHead(statusCode);
-    response.end();
-  }
-
+  response = routerObj.router(request, response, request.method, request.url);
 };
 
 var defaultCorsHeaders = {
