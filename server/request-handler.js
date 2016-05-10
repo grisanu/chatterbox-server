@@ -27,23 +27,38 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
+  // console.log(request);
+    
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
+
   // The outgoing status.
-  var statusCode = 200;
+  var statusCode = request.method === 'GET' ? 200 : 201;
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
+  // if (request.method === 'GET') {
+  //   statusCode = 200;
+  // } else if (request.method === 'OPTIONS') {
+  //   statusCode = 200;
+  //   headers['Allow'] = 'GET, POST, OPTIONS';
+  // } else {
+  //   statusCode = 201;
+  // }
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
+
+  request.on('error', function (err) {
+    console.error(err.stack);
+  });
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -52,7 +67,30 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  if (request.method === 'POST') {
+
+    request.pipe(response);
+    // var body = [];
+    // request.on('data', function (chunk) {
+    //   body.push(chunk);
+    //   // console.log(chunk);
+    // }).on('end', function () {
+    //   body = Buffer.concat(body).toString();
+    // });
+
+    // var responseBody = {
+    //   headers: headers,
+    //   method: request.method,
+    //   url: request.url,
+    //   body: body
+    // };
+
+    // console.log(JSON.stringify(responseBody));
+
+    // response.end(JSON.stringify(responseBody));
+  } else if (request.method === 'GET' || request.method === 'OPTIONS') {
+    response.end('{"results": ["hello"]}');
+  }
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -67,7 +105,8 @@ var requestHandler = function(request, response) {
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
+  'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id, PARSE_APP_ID, X-Parse-REST-API-Key, PARSE_API_KEY',
   'access-control-max-age': 10 // Seconds.
 };
 
+exports.handleRequest = requestHandler;
