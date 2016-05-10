@@ -12,7 +12,7 @@ var headers = defaultCorsHeaders;
 headers['Content-Type'] = 'application/json';
 
 
-var router = function (req, res, method, url) {
+var router = function (url, res, req, method) {
   var statusCode;
 
   var responseBody = {
