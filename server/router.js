@@ -11,6 +11,7 @@ var headers = defaultCorsHeaders;
 
 headers['Content-Type'] = 'application/json';
 
+var objectId = 0;
 
 var router = function (url, res, req, method) {
   var statusCode;
@@ -38,7 +39,9 @@ var router = function (url, res, req, method) {
         body.push(chunk);
       }).on('end', function () {
         body = Buffer.concat(body).toString();
-        storage.results.push(JSON.parse(body));
+        var message = JSON.parse(body);
+        message.objectId = ++objectId;
+        storage.results.push(message);
       });
 
 

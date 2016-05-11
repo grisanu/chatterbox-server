@@ -29,14 +29,20 @@ var urlObj = {
   '/env/config.js': fsReadFileHelper.bind(null, '../client/env/config.js'),
   '/scripts/app.js': fsReadFileHelper.bind(null, '../client/scripts/app.js'),
   '/images/spiffygif_46x46.gif': fsReadFileHelper.bind(null, '../client/images/spiffygif_46x46.gif')
+  // '/?username=': fsReadFileHelper.bind(null, '../client/index.html')
 };
 
 var requestHandler = function(request, response) {
 
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
+  
+  var url = request.url;
+  if (/^\/\?username=/.test(request.url)) {
+    url = '/';
+  }
 
-  if (urlObj[request.url] !== undefined) {
-    urlObj[request.url](response, request, request.method);
+  if (urlObj[url] !== undefined) {
+    urlObj[url](response, request, request.method);
     // fsReadFileHelper(response);
   } else {
     response.writeHead(404);
